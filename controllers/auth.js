@@ -1,6 +1,7 @@
 const User = require('../models/User')
 const CustomError = require('../errors')
 const { StatusCodes } = require('http-status-codes')
+const { attachCookiesToResponse, createTokenUser } = require('../utils')
 const register = async (req,res) =>{
   const { email, name, password } = req.body;
 
@@ -15,8 +16,12 @@ const register = async (req,res) =>{
   const role = isFirstAccount ? "admin" : "user";
 
   const user = await User.create({ name, email, password, role }); // for security, we can only change on MongoDB
+  //  once the user is created, now the issue is JWT
+  // we are going to send the id, role(role-based authentication)
+  const tokenUser = createTokenUser(user);
+  attachCookiesToResponse({ res, tokenUser });
 
-  res.status(StatusCodes.CREATED).json({ user })
+  res.status(StatusCodes.CREATED).json({ user:tokenUser });
 }
 const login = async (req,res) =>{
     const { email, password } = req.body;
@@ -38,7 +43,10 @@ const login = async (req,res) =>{
       throw new CustomError.UnauthenticatedError("Invalid credentials");
     }
 
-    res.status(StatusCodes.OK).json({ user });
+    const tokenUser = createTokenUser(user);
+    attachCookiesToResponse({ res, tokenUser });
+    
+    res.status(StatusCodes.OK).json({ user:tokenUser });
 }
 const logout = async (req,res) =>{
     res.send('logout')
