@@ -3,6 +3,12 @@ require('express-async-errors');
 const express = require('express');
 const app = express();
 
+// extra security packages
+const helmet = require('helmet');
+const cors = require('cors')
+const rateLimit = require('express-rate-limit');
+const xss = require('xss-clean')
+
 // DB
 const connectDB = require('./db/connect')
 
@@ -22,7 +28,18 @@ const errorHandlerMiddleware = require('./middleware/error-handler');
 
 app.use(express.json());
 app.use(cookieParser(process.env.JWT_SECRET));
+app.use(express.static("./public"));
 // extra packages
+app.set("trust proxy", 1);
+app.use(
+  rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 60, // limit each IP to 100 requests per windowMs
+  })
+);
+app.use(helmet());  
+app.use(cors());
+app.use(xss());
 
 // routes
 app.use('/api/v1/auth', authRoutes);
