@@ -30,4 +30,18 @@ const authenticateUser = async (req, res, next) => {
   }
 };
 
-module.exports = { authenticateUser }
+// Middleware to authorize user roles for specific routes
+const authorizePermissions = (...roles) => {
+  return (req, res, next) => {
+    // Check if the user's role is included in the allowed roles
+    if (!roles.includes(req.user.role)) {
+      // If not, throw an UnauthorizedError
+      throw new CustomError.UnauthorizedError(
+        "Unauthorized to access this route"
+      );
+    }
+    // If the user's role is authorized, proceed to the next middleware/route handler
+    next();
+  };
+};
+module.exports = { authenticateUser,authorizePermissions }

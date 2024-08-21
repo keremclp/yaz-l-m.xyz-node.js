@@ -9,8 +9,16 @@ const {
   deleteJob,
 } = require("../controllers/jobs");
 
-router.route("/").post(createJob).get(getAllJobs);
-router.route("/:id").get(getSingleJob).delete(deleteJob).patch(updateJob);
+const { authorizePermissions } = require("../middleware/authentication");
+router
+  .route("/")
+  .post(authorizePermissions('admin'), createJob)
+  .get(getAllJobs);
 
+  router.
+    route("/:id")
+    .get(getSingleJob)
+    .delete(authorizePermissions('admin'),deleteJob)
+    .patch(authorizePermissions('admin'),updateJob);
 
 module.exports = router;
